@@ -9,4 +9,4 @@
 待写的功能
 收藏功能，根据elasticsearch实现全文搜索功能，聊天室功能
 前端代码
-https://github.com/xinluo1011/blog-font/tree/master
+https://github.com/xinluo1011/blog-font
