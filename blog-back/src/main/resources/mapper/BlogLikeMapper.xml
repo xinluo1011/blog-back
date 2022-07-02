@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sit.manage.mapper.BlogLikeMapper">
+
+    <resultMap id="BaseResultMap" type="com.sit.manage.entity.BlogLike">
+            <id property="id" column="id" jdbcType="INTEGER"/>
+            <result property="blogid" column="blogId" jdbcType="INTEGER"/>
+            <result property="userid" column="userId" jdbcType="INTEGER"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,blogId,userId,
+        create_time
+    </sql>
+    <insert id="insertLiked">
+        insert into blog_like(userId,blogId) values (#{userId},#{blogId})
+    </insert>
+    <delete id="deleteLiked">
+        delete from blog_like where blogId = #{blogId} and userId = #{userId}
+    </delete>
+    <select id="getBlogLike" parameterType="java.lang.Integer" resultType="java.lang.Integer">
+        select count(1) from blog_like where blogId = #{bId}
+    </select>
+    <select id="getIsLiked" resultType="java.lang.Integer">
+        select count(1) from blog_like where blogId = #{blogId} and userId = #{userId}
+    </select>
+</mapper>

@@ -1,0 +1,26 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: 123456
+    url: jdbc:mysql://localhost:3306/manage?characterEncoding=utf-8
+  redis:
+    host: 192.168.10.10
+    port: 6379
+    password: 101120316
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+        max-wait: 100ms
+server:
+  port: 8082
+
+mybatis:
+  mapper-locations: classpath:mapper/*Mapper.xml
+  type-aliases-package: com.sit.manage.entity
+
+files:
+  upload:
+    path: E:\后台管理项目\files\
