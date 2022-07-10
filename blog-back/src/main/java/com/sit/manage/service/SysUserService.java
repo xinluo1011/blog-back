@@ -5,11 +5,14 @@ import com.sit.manage.controller.dto.PwdDTO;
 import com.sit.manage.controller.dto.UserDTO;
 import com.sit.manage.entity.SysUser;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.sit.manage.entity.UserFollow;
+import com.sit.manage.entity.UserInfo;
 import com.sit.manage.vo.ResultVO;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import java.util.List;
 
 /**
 * @author 星络
@@ -33,4 +36,10 @@ public interface SysUserService extends IService<SysUser> {
     ResultVO editPwd(PwdDTO pwdDTO);
 
     SysUser findUserById(Integer id);
+
+    List<UserFollow> findFollow(Integer pageNum, Integer pageSize, Integer userId);
+
+    Boolean addFollow(UserFollow userFollow);
+
+    List<UserInfo> findBothFollow(Integer userId,Integer followId);
 }

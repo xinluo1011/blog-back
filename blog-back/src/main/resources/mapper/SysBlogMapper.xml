@@ -12,7 +12,6 @@
             <result property="time" column="time" jdbcType="VARCHAR"/>
             <result property="uid" column="uid" jdbcType="INTEGER"/>
             <result property="description" column="description" jdbcType="VARCHAR"/>
-            <result property="cid" column="cid" jdbcType="INTEGER"/>
             <result property="tUrl" column="t_url" jdbcType="VARCHAR"/>
             <result property="isRecommend" column="is_recommend" jdbcType="TINYINT"/>
     </resultMap>
@@ -23,8 +22,26 @@
         description,cid,t_url,
         is_recommend
     </sql>
+    <insert id="addStar" parameterType="com.sit.manage.entity.BlogStar">
+        insert into blog_star(blogId,userId,groupId) values (#{blogId},#{userId},#{groupId})
+    </insert>
+    <delete id="deleteStar">
+        delete from blog_star where blogId = #{blogId} and userId = #{userId}
+    </delete>
     <select id="getCategoryByBlogId" parameterType="java.lang.Integer" resultType="java.lang.String">
-        select name from sys_category where id = #{cid}
+        select name from sys_category where id in (select categoryId from blog_category where blogId = #{blogId})
+    </select>
+    <select id="getById" parameterType="java.lang.Integer" resultType="com.sit.manage.entity.StarGroup">
+        select * from star_group where id = #{groupId}
+    </select>
+    <select id="getBlogById" parameterType="java.lang.Integer" resultType="com.sit.manage.entity.SysBlog">
+        select * from sys_blog where id = #{blogId}
+    </select>
+    <select id="getBlogStar" parameterType="java.lang.Integer" resultType="java.lang.Integer">
+        select count(1) from blog_star where blogId = #{bId}
+    </select>
+    <select id="getIsStar" resultType="java.lang.Integer">
+        select count(1) from blog_star where blogId = #{blogId} and userId = #{userId}
     </select>
 
 </mapper>

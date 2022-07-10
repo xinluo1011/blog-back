@@ -14,5 +14,14 @@ public class ResStatus {
     public static final String BLOG_KEY = "FIND_BLOG_ALL";
 
     public static final  String BLOG_LIKED = "blog:liked:";
+    public static final  String BLOG_STAR = "blog:star:";
+
+    public static final  String BLOG_LIKED_KEY = "blog:likedCount";
+
+    public static final  String BLOG_STAR_KEY = "blog:starCount";
+
+    public static final  String FOLLOW_KEY = "follows";
+
+
 }
 

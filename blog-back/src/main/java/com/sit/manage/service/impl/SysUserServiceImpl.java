@@ -1,16 +1,16 @@
 package com.sit.manage.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sit.manage.controller.dto.PwdDTO;
 import com.sit.manage.controller.dto.UserDTO;
-import com.sit.manage.entity.SysMenu;
-import com.sit.manage.entity.SysRole;
-import com.sit.manage.entity.SysUser;
+import com.sit.manage.entity.*;
 import com.sit.manage.exception.ServiceException;
 import com.sit.manage.mapper.RoleMenuMapper;
 import com.sit.manage.mapper.SysRoleMapper;
@@ -22,20 +22,21 @@ import com.sit.manage.util.RegexUtils;
 import com.sit.manage.util.TokenUtils;
 import com.sit.manage.vo.ResStatus;
 import com.sit.manage.vo.ResultVO;
+import io.swagger.models.auth.In;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.sit.manage.util.RedisConstants.*;
 import static com.sit.manage.util.SystemConstants.USER_NICK_NAME_PREFIX;
+import static com.sit.manage.vo.ResStatus.FOLLOW_KEY;
 
 
 /**
@@ -356,6 +357,119 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
     public SysUser findUserById(Integer id) {
         SysUser userById = userMapper.findUserById(id);
         return userById;
+    }
+
+    /**
+     * 查找用户关注的好友（分页）
+     * @param pageNum 页数
+     * @param pageSize 每次数量
+     * @param userId 用户Id
+     * @return
+     */
+    @Override
+    public List<UserFollow> findFollow(Integer pageNum, Integer pageSize, Integer userId) {
+        Integer page = (pageNum-1)*pageSize;
+        //1.根据用户Id查找关注Id列表
+        List<UserFollow> userFollowList = userMapper.selectFollowList(userId,page,pageSize);
+        //2.判断关注Id列表是否为空
+        //2.1.为空返回一个空列表
+        if(ObjectUtil.isEmpty(userFollowList)){
+            return new ArrayList<>(Collections.emptyList());
+        }
+        //2.2.不为空
+        //查找关注的人信息
+        //3.1.筛选出关注列表Id
+        Set<Integer> followList = userFollowList.stream().map(UserFollow::getFollowId).collect(Collectors.toSet());
+        //3.2.根据关注Id查找用户信息User
+        List<SysUser> userList = userMapper.findFollowInfoById(followList);
+        //3.3.将User信息写到UserInfo中
+        for(UserFollow follow : userFollowList){
+            for(SysUser user : userList){
+                //如果关注Id等于查到的用户信息Id
+                if(follow.getFollowId() == user.getId()){
+                    //将该用户信息转换为UserInfo
+                    UserInfo userInfo = new UserInfo();
+                    userInfo.setUserId(user.getId());
+                    userInfo.setNickname(user.getNickname());
+                    userInfo.setAvatarUrl(user.getAvatarUrl());
+                    follow.setUserInfo(userInfo);
+                }
+            }
+        }
+        return userFollowList;
+    }
+
+    /**
+     * 关注用户
+     * @param userFollow 用户关注信息
+     * @return Boolean
+     */
+    @Override
+    public Boolean addFollow(UserFollow userFollow) {
+        //获取用户Id
+        Integer userId = TokenUtils.getCurrentUser().getId();
+        //判断用户关注信息的用户Id和token的用户Id是否一致
+        if(userId != userFollow.getUserId()){
+            //不一致抛出异常
+            throw new ServiceException("参数异常！");
+        }
+        String key = FOLLOW_KEY + userId;
+        Integer followId = userFollow.getFollowId();
+        //1.根据用户Id和关注的用户Id查找用是否已经关注
+        Integer count = userMapper.findIsFollow(userId,followId);
+        //2.判断
+        if(count > 0){
+            //2.1.关注，就取消关注，删除数据
+            Integer remove = userMapper.deleteFollow(userId,followId);
+            if(remove < 0){
+                //删除失败抛异常
+                throw new ServiceException("失败！");
+            }else {
+                //删除成功将redis中的信息也删除
+                stringRedisTemplate.opsForSet().remove(key,followId.toString());
+            }
+        }else {
+            //2.2.没有关注，添加关注信息
+            userFollow.setCreateTime(new Date());
+            Integer add = userMapper.addFollow(userFollow);
+            if(add < 0){
+                throw new ServiceException("失败！");
+            }else {
+                stringRedisTemplate.opsForSet().add(key,followId.toString());
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 共同关注
+     * @param userId 用户Id
+     * @param followId 关注的用户Id
+     * @return 共同关注列表
+     */
+    @Override
+    public List<UserInfo> findBothFollow(Integer userId,Integer followId) {
+        //获取用户和关注用户的关注的key
+        String key1 = FOLLOW_KEY + userId;
+        String key2 = FOLLOW_KEY + followId;
+        //求两者的交集
+        Set<String> intersect = stringRedisTemplate.opsForSet().intersect(key1, key2);
+        if(intersect == null || intersect.isEmpty()){
+            return new ArrayList<>(Collections.emptyList());
+        }
+        //筛选出Id
+        List<Integer> collect = intersect.stream().map(Integer::valueOf).collect(Collectors.toList());
+        List<UserInfo> res = new ArrayList<>();
+        //根据Id查询用户信息
+        for(Integer id : collect){
+            SysUser user = userMapper.findUserById(id);
+            UserInfo userInfo = new UserInfo();
+            userInfo.setUserId(user.getId());
+            userInfo.setNickname(user.getNickname());
+            userInfo.setAvatarUrl(user.getAvatarUrl());
+            res.add(userInfo);
+        }
+        return res;
     }
 
     /**

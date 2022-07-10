@@ -6,7 +6,10 @@ import com.sit.manage.controller.dto.PwdDTO;
 import com.sit.manage.controller.dto.UserDTO;
 import com.sit.manage.entity.SysBlog;
 import com.sit.manage.entity.SysUser;
+import com.sit.manage.entity.UserFollow;
+import com.sit.manage.entity.UserInfo;
 import com.sit.manage.service.SysUserService;
+import com.sit.manage.util.TokenUtils;
 import com.sit.manage.vo.ResStatus;
 import com.sit.manage.vo.ResultVO;
 import io.swagger.annotations.Api;
@@ -127,5 +130,29 @@ public class UserController {
     public ResultVO getUserById(@PathVariable Integer id){
         SysUser user = userService.getById(id);
         return new ResultVO(ResStatus.SUCCESS,"成功",user);
+    }
+
+    @ApiOperation("分页查询用户关注信息")
+    @GetMapping("/follow")
+    public ResultVO findFollow(@RequestParam Integer pageNum,
+                             @RequestParam Integer pageSize){
+        Integer userId = TokenUtils.getCurrentUser().getId();
+        List<UserFollow> userFollows = userService.findFollow(pageNum,pageSize,userId);
+        return new ResultVO(ResStatus.SUCCESS,"成功",userFollows);
+    }
+
+    @ApiOperation("关注用户")
+    @PostMapping("/follow")
+    public ResultVO addFollow(@RequestBody UserFollow userFollow){
+        Boolean isSuccess = userService.addFollow(userFollow);
+        return new ResultVO(100,"成功",isSuccess);
+    }
+
+    @ApiOperation("查询共同关注")
+    @GetMapping("/both-follow")
+    public ResultVO findBothFollow(@RequestParam Integer followId){
+        Integer userId = TokenUtils.getCurrentUser().getId();
+        List<UserInfo> userFollows = userService.findBothFollow(userId,followId);
+        return new ResultVO(ResStatus.SUCCESS,"成功",userFollows);
     }
 }

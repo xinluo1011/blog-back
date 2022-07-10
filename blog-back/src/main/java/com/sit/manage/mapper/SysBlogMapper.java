@@ -1,7 +1,10 @@
 package com.sit.manage.mapper;
 
+import com.sit.manage.entity.BlogStar;
+import com.sit.manage.entity.StarGroup;
 import com.sit.manage.entity.SysBlog;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
@@ -18,7 +21,19 @@ public interface SysBlogMapper extends BaseMapper<SysBlog> {
     List<SysBlog> findBlogs();
 
 
-    List<String> getCategoryByBlogId(Integer cid);
+    List<String> getCategoryByBlogId(Integer blogId);
+
+    StarGroup getById(Integer groupId);
+
+    SysBlog getBlogById(Integer blogId);
+
+    void deleteStar(@Param("blogId") Integer blogId,@Param("userId") Integer userId);
+
+    void addStar(BlogStar blogStar);
+
+    Integer getBlogStar(Integer bId);
+
+    Integer getIsStar(@Param("blogId") Integer blogId,@Param("userId") Integer userId);
 }
 
 

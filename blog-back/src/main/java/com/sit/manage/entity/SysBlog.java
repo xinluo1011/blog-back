@@ -66,7 +66,14 @@ public class SysBlog implements Serializable {
     private Integer liked;
 
     @TableField(exist = false)
+    private Integer stared;
+
+    @TableField(exist = false)
     private Boolean isLiked;
+
+    //是否收藏
+    @TableField(exist = false)
+    private Boolean isStared;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

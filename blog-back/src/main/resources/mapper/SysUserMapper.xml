@@ -23,6 +23,12 @@
         address,create_time,update_time,
         avatar_url
     </sql>
+    <insert id="addFollow" parameterType="com.sit.manage.entity.UserFollow">
+        insert into user_follow(user_id,follow_id,create_time) values (#{userId},#{followId},#{createTime})
+    </insert>
+    <delete id="deleteFollow">
+        delete from user_follow where user_id = #{userId} and follow_id = #{followId}
+    </delete>
     <select id="checkNickNameSaveInfo" resultType="com.sit.manage.entity.SysUser">
         select * from sys_user where nickname=#{nickname}
         and id != (select id from sys_user where id = #{id})
@@ -30,6 +36,22 @@
     <select id="checkSaveInfo" resultType="com.sit.manage.entity.SysUser">
         select * from sys_user where email=#{email}
         and id != (select id from sys_user where id = #{id})
+    </select>
+    <select id="selectFollowList" resultType="com.sit.manage.entity.UserFollow">
+        select * from user_follow where user_id = #{userId}
+        limit #{page},#{size}
+    </select>
+    <select id="findFollowInfoById" parameterType="java.util.Set" resultType="com.sit.manage.entity.SysUser">
+        select * from sys_user where 1=1
+        <if test="followList != null and followList.size > 0">
+            and id in
+            <foreach collection="followList" item="follow" index="index" open="(" close=")" separator=",">
+                #{follow}
+            </foreach>
+        </if>
+    </select>
+    <select id="findIsFollow" resultType="java.lang.Integer">
+        select count(1) from user_follow where user_id = #{userId} and follow_id = #{followId}
     </select>
 
 </mapper>

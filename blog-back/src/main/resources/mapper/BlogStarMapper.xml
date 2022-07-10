@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sit.manage.mapper.BlogStarMapper">
+
+    <resultMap id="BaseResultMap" type="com.sit.manage.entity.BlogStar">
+            <id property="id" column="id" jdbcType="INTEGER"/>
+            <result property="blogid" column="blogId" jdbcType="INTEGER"/>
+            <result property="userid" column="userId" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,blogId,userId
+    </sql>
+</mapper>
